@@ -24,6 +24,8 @@ fn read_input_file() !std.ArrayList([]const u8) {
 pub fn main() !void {
     const lines = try read_input_file();
 
+    // First half of the puzzle
+
     var sum: u32 = 0;
 
     for (lines.items) |line| {
@@ -68,4 +70,46 @@ pub fn main() !void {
     }
 
     std.debug.print("first half total: {}\n", .{sum});
+
+    // Second half of the puzzle
+
+    sum = 0;
+
+    for (lines.items) |line| {
+        var red_max: u8 = 0;
+        var green_max: u8 = 0;
+        var blue_max: u8 = 0;
+
+        var header_body_split = std.mem.split(u8, line, ":");
+        const game_id = try std.fmt.parseInt(u8, header_body_split.next().?[5..], 10);
+        _ = game_id;
+
+        var record_split = std.mem.split(u8, header_body_split.next().?, ";");
+
+        while (record_split.next()) |record| {
+            // std.debug.print("record: {s}\n", .{record});
+            var cubes_split = std.mem.split(u8, record, ",");
+            while (cubes_split.next()) |cube| {
+                var num_colour_split = std.mem.split(u8, cube, " ");
+                // remove first space which is empty
+                _ = num_colour_split.next().?;
+                const cube_value = try std.fmt.parseInt(u8, num_colour_split.next().?, 10);
+                const cube_colour = num_colour_split.next().?;
+                // std.debug.print("colour, value: {s} {}\n", .{ cube_colour, cube_value });
+
+                if (std.mem.eql(u8, "red", cube_colour) and cube_value > red_max) {
+                    red_max = cube_value;
+                } else if (std.mem.eql(u8, "green", cube_colour) and cube_value > green_max) {
+                    green_max = cube_value;
+                } else if (std.mem.eql(u8, "blue", cube_colour) and cube_value > blue_max) {
+                    blue_max = cube_value;
+                }
+            }
+        }
+
+        // std.debug.print("r: {}, g: {}, b: {}\n", .{ red_max, green_max, blue_max });
+        sum += (@as(u32, red_max) * green_max * blue_max);
+    }
+
+    std.debug.print("second half total: {}\n", .{sum});
 }
