@@ -4,6 +4,7 @@ const allocator = std.heap.page_allocator;
 
 const WINNING_NUM_LEN: u8 = 10;
 const NUM_LEN: u8 = 25;
+const CARD_NUM: u16 = 212;
 
 fn read_input_file() !std.ArrayList([]const u8) {
     const file = try std.fs.cwd().openFile("input.txt", .{ .mode = .read_only });
@@ -71,4 +72,66 @@ pub fn main() !void {
     }
 
     std.debug.print("first half total: {}\n", .{sum});
+
+    // Second half of the puzzle
+
+    sum = 0;
+
+    var repeat_count = [_]u32{1} ** CARD_NUM;
+
+    for (lines.items, 0..) |line, card_number| {
+        var header_body_split = std.mem.split(u8, line, ":");
+        _ = header_body_split.next().?;
+
+        var entry_split = std.mem.split(u8, header_body_split.next().?, "|");
+
+        var winnings_split = std.mem.split(u8, entry_split.next().?, " ");
+        var winnings: [WINNING_NUM_LEN]u8 = undefined;
+        var count: usize = 0;
+
+        while (winnings_split.next()) |value| {
+            if (value.len == 0) continue;
+            winnings[count] = try std.fmt.parseInt(u8, value, 10);
+            count += 1;
+        }
+
+        // std.debug.print("winnings: {any}\n", .{winnings});
+
+        var numbers_split = std.mem.split(u8, entry_split.next().?, " ");
+        var numbers: [NUM_LEN]u8 = undefined;
+        count = 0;
+
+        while (numbers_split.next()) |value| {
+            if (value.len == 0) continue;
+            numbers[count] = try std.fmt.parseInt(u8, value, 10);
+            count += 1;
+        }
+
+        // std.debug.print("numbers: {any}\n", .{numbers});
+
+        var match_count: usize = 0;
+
+        for (winnings) |win_num| {
+            for (numbers) |num| {
+                if (win_num == num) match_count += 1;
+            }
+        }
+
+        if (match_count != 0) {
+            var i: usize = 0;
+            while (i < repeat_count[card_number]) : (i += 1) {
+                var j: usize = 1;
+                while (j <= match_count) : (j += 1) {
+                    if (card_number + j >= CARD_NUM) break;
+                    repeat_count[card_number + j] += 1;
+                }
+            }
+        }
+    }
+
+    for (repeat_count) |value| {
+        sum += value;
+    }
+
+    std.debug.print("second half total: {}\n", .{sum});
 }
